@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from datetime import datetime
 from create_db import create_db
+import json
 
 Base = declarative_base()
 
@@ -28,9 +29,11 @@ app = Flask(__name__)
 def post():
     '''Принимает результаты'''
     data = request.get_json()
+    # Преобразуем словарь в строку
+    result_str = json.dumps(data)
     # запись в БД
     result_obj = Result(
-        result=data,
+        result=result_str,
     )
     session.add(result_obj)
     session.commit()
