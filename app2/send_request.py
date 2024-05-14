@@ -70,7 +70,7 @@ for filename in os.listdir(path_dir):
         log = InfoLogs(
             api_url=url1,
             success=1 if request.status_code == 200 else 0,
-            success_result=request.json(),
+            # success_result=request.json(),
             error=request.status_code if request.status_code != 200 else None
         )
         result = Result(
@@ -91,5 +91,6 @@ for filename in os.listdir(path_dir):
             bdate=request.json()['document']['bdate'],
             type_doc=request.json()['document']['type_doc'],
         )
+        session.add(result)
         session.add(log)
         session.commit()
