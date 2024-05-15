@@ -1,22 +1,18 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-import sqlalchemy
+from sqlalchemy.orm import sessionmaker
+from model_tables import BASE, InfoLogs, ComparisonResult, Result
 import requests
 import os
 from create_db import create_db
 from datetime import datetime
-from model_tables import BASE, InfoLogs, ComparisonResult, Result
 
 # создается БД
 create_db()
 engine = create_engine("mysql+pymysql://user:12345@localhost/database")
 
 # модель таблицы запросов
-
-
 BASE.metadata.create_all(engine)
-Session = sqlalchemy.orm.sessionmaker()
-Session.configure(bind=engine)
+Session = sessionmaker(bind=engine)
 session = Session()
 
 # отправка запроса и фото:
@@ -43,21 +39,19 @@ for filename in os.listdir(path_dir):
         log1 = InfoLogs(
             api_url=url1,
             success=1 if request1.status_code == 200 else 0,
-            success_result=request1.json(),
+            success_result=str(request1.json()),
             error=request1.status_code if request1.status_code != 200 else None
         )
         session.add(log1)
-        session.commit()
 
         # запись состояния отправки на 2 роут
         log2 = InfoLogs(
             api_url=url2,
             success=1 if request2.status_code == 200 else 0,
-            success_result=request2.json(),
+            success_result=str(request2.json()),
             error=request2.status_code if request2.status_code != 200 else None
         )
         session.add(log2)
-        session.commit()
 
         # запись пришедших данных с 1го роута
         result1 = Result(
@@ -79,7 +73,6 @@ for filename in os.listdir(path_dir):
             type_doc=request1.json()['document']['type_doc'],
         )
         session.add(result1)
-        session.commit()
 
         # запись пришедших данных со 2го роута
         result2 = Result(
@@ -101,31 +94,28 @@ for filename in os.listdir(path_dir):
             type_doc=request2.json()['document']['type_doc'],
         )
         session.add(result2)
-        session.commit()
 
         # сравнение результатов и запись схожести в БД
         series = 1 if request1.json()['document']['series'] == request2.json()['document']['series'] else 0
         number = 1 if request1.json()['document']['number'] == request2.json()['document']['number'] else 0
-        department = 1 if request1.json()['document']['department'] == request2.json()['document'][
-            'department'] else 0
+        department = 1 if request1.json()['document']['department'] == request2.json()['document']['department'] else 0
         code = 1 if request1.json()['document']['code'] == request2.json()['document']['code'] else 0
         date_of_issue = 1 if request1.json()['document']['date_of_issue'] == request2.json()['document'][
             'date_of_issue'] else 0
         gender = 1 if request1.json()['document']['gender'] == request2.json()['document']['gender'] else 0
-        birthplace = 1 if request1.json()['document']['birthplace'] == request2.json()['document'][
-            'birthplace'] else 0
-        patronymic = 1 if request1.json()['document']['patronymic'] == request2.json()['document'][
-            'patronymic'] else 0
-        first_name = 1 if request1.json()['document']['first_name'] == request2.json()['document'][
-            'first_name'] else 0
+        birthplace = 1 if request1.json()['document']['birthplace'] == request2.json()['document']['birthplace'] else 0
+        patronymic = 1 if request1.json()['document']['patronymic'] == request2.json()['document']['patronymic'] else 0
+        first_name = 1 if request1.json()['document']['first_name'] == request2.json()['document']['first_name'] else 0
         last_name = 1 if request1.json()['document']['last_name'] == request2.json()['document']['last_name'] else 0
-        bdate = 1 if request1.json()['document']['bdate'] == request2.json()['document']['bdate'] else 0,
-        type_doc = 1 if request1.json()['document']['type_doc'] == request2.json()['document']['type_doc'] else 0,
+        bdate = 1 if request1.json()['document']['bdate'] == request2.json()['document']['bdate'] else 0
+        type_doc = 1 if request1.json()['document']['type_doc'] == request2.json()['document']['type_doc'] else 0
 
         # расчет точности:
         # один показатель = 8,3% так как показателей 12 -> 100 / 12 ~ 8.3
         percentage_of_accuracy = (
-                                         series + number + department + code + date_of_issue + gender + birthplace + patronymic + first_name + last_name + bdate + type_doc) * 8.3
+                                         series + number + department + code + date_of_issue + gender + birthplace + patronymic + first_name +
+                                         last_name + bdate + type_doc) * 8.3
+        percentage_of_accuracy = round(percentage_of_accuracy, 2)
         percentage_of_accuracy = str(percentage_of_accuracy) + '%'
         accuracy = ComparisonResult(
             timestamp=datetime.now(),
@@ -144,4 +134,5 @@ for filename in os.listdir(path_dir):
             percentage_of_accuracy=percentage_of_accuracy
         )
         session.add(accuracy)
-        session.commit()
+
+session.commit()
