@@ -46,4 +46,24 @@ def create_db():
         )
         ''')
 
+    mycursor.execute('''
+        CREATE TABLE IF NOT EXISTS comparison_result (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            series INT,
+            number INT,
+            department INT,
+            code INT,
+            date_of_issue INT,
+            gender INT,
+            birthplace INT,
+            last_name INT,
+            first_name INT,
+            patronymic INT,
+            bdate INT,
+            type_doc INT,
+            percentage_of_accuracy VARCHAR(10)
+        )
+    ''')
+
 
